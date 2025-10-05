@@ -1,4 +1,4 @@
-# Spice House — Restaurant Menu (v1.1.0)
+# Spice House — Restaurant Menu (v1.1.1)
 
 # Local static single-page Restaurant Menu app built with vanilla JavaScript and Bootstrap.
 
@@ -6,12 +6,12 @@
 
 1. Open `index.html` in your browser (double-click or open from your editor). For full local-image fetch behavior, it's recommended to serve the folder with a simple static server (see "Run locally").
 
-# Highlights (what's new in v1.1.0)
+# Highlights (what's new in v1.1.1)
 
-- Local images support: menu items now reference local files under the `images/` directory where available.
-- In-browser image upload: upload an image per dish from the UI; uploaded images persist in the browser via localStorage.
-- Improved header layout and control alignment (currency selector, Edit Prices, View Orders).
-- Bug fixes: duplicate/placeholder remote images replaced with local assets where provided.
+- Added a discount selector in the Filters area (No discount / 10% / 25% / 50%). Selection persists in localStorage.
+- Price display improved: original price is shown struck-through and the discounted price appears alongside with a small badge.
+- Orders modal shows a short loading animation and was made more robust; saved orders display stored paid amounts without double-discounting.
+- Accessibility: background content is marked `inert` while modals are open instead of toggling `aria-hidden` on ancestors.
 
 # Features
 - Browse menu by category (All, Starters, Main, Rice & Biryani, Bread, Sides, Dessert, Beverages)

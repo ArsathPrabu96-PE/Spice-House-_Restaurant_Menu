@@ -43,6 +43,12 @@ body {
 /* Filters */
 .filters-row button{ margin-right:8px; margin-bottom:8px; border-radius:999px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
 
+/* Align filters row: buttons on left, controls (toggle) on right */
+.filters-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.filter-buttons{ display:flex; flex-wrap:wrap; align-items:center; }
+.filter-controls{ display:flex; align-items:center; }
+.filter-controls .form-check-label{ color: #fff; }
+
 /* Cards: 3D style */
 .card{
 	border-radius:18px;
@@ -160,6 +166,20 @@ body {
 #orders-list .order { border-bottom:1px solid rgba(0,0,0,0.06); padding:8px 0; }
 #orders-list .order .meta { color: #666; font-size: 0.85rem; }
 
+/* Orders loading spinner */
+.orders-loading{ display:flex; align-items:center; gap:10px; justify-content:center; padding:18px 0; }
+.orders-spinner{ width:22px; height:22px; border-radius:50%; border:3px solid rgba(0,0,0,0.08); border-top-color: #ff6b6b; animation: spin 800ms linear infinite; }
+@keyframes spin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+
 /* Cart badge adjustments */
 #cart-badge { font-size: 0.65rem; padding: 0.35rem 0.45rem; }
+
+/* Price display: original (struck) and discounted */
+.orig-price{ text-decoration: line-through; color: #777; font-size:0.9rem; }
+.disc-price{ color: #111; font-weight:700; background: linear-gradient(90deg,#fff,#fff); padding:2px 6px; border-radius:6px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+.price-block{ cursor: pointer; }
+.price-block:hover .disc-price{ transform: translateY(-1px); }
+
+/* small visual badge on cards when discount active (added via JS classes if desired) */
+.discount-badge{ display:inline-block; background:linear-gradient(90deg,#ff6b6b,#ff922b); color:#fff; padding:2px 6px; border-radius:6px; font-size:0.75rem; margin-left:6px; }
 

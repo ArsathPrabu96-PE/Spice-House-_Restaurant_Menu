@@ -100,6 +100,15 @@ const usdFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'US
 
 // conversion base: prices stored in INR. how many INR per 1 unit of currency
 const conversionToINR = { INR: 1, USD: 83 };
+
+// Display reduction base factor (50% when enabled)
+// track discount percent (0,25,50) persisted in localStorage
+const DISCOUNT_PERCENT_KEY = 'restaurant_discount_percent_v1';
+let savedPercent = 0;
+try{ savedPercent = Number(localStorage.getItem(DISCOUNT_PERCENT_KEY) || 0); }catch(e){ savedPercent = 0; }
+if (![0,10,25,50].includes(savedPercent)) savedPercent = 0;
+state.discountPercent = savedPercent;
+state.discountPercent = savedPercent;
 state.currency = 'INR';
 
 // load cart from localStorage if exists
@@ -130,11 +139,13 @@ function uniqueCategories(items) {
 
 function renderFilters() {
   const cats = uniqueCategories(menu);
-  filtersEl.innerHTML = cats.map(cat => `
+  // render buttons into the .filter-buttons container (so we don't clobber other controls like the discount toggle)
+  const btnContainer = filtersEl.querySelector('.filter-buttons') || filtersEl;
+  btnContainer.innerHTML = cats.map(cat => `
     <button class="btn btn-sm me-2 ${cat===state.filter? 'btn-primary': 'btn-outline-primary'}" data-cat="${cat}">${cat}</button>
   `).join('');
 
-  filtersEl.querySelectorAll('button').forEach(btn => {
+  btnContainer.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
       state.filter = btn.getAttribute('data-cat');
       renderFilters();
@@ -149,11 +160,33 @@ function formatPrice(n){
 
 function formatForDisplay(priceInINR){
   try{
-    if(state.currency === 'INR') return inrFmt.format(priceInINR);
+  // apply a global display reduction factor based on selected percent
+  const pct = (state && typeof state.discountPercent === 'number') ? state.discountPercent : 0;
+  const factor = 1 - (pct/100);
+  const effectiveINR = Number((priceInINR * factor).toFixed(2));
+    if(state.currency === 'INR') return inrFmt.format(effectiveINR);
     // convert INR -> USD for display
-    const usd = priceInINR / conversionToINR['USD'];
+    const usd = effectiveINR / conversionToINR['USD'];
     return usdFmt.format(usd);
   }catch(e){ return priceInINR.toFixed(2); }
+}
+
+// Format a stored paid INR amount without applying the global discount (used for saved orders)
+function formatPaidForDisplay(priceInINR){
+  try{ return inrFmt.format(Number(priceInINR)); }catch(e){ return Number(priceInINR).toFixed(2); }
+}
+
+// Render HTML block for price: shows original (struck) and discounted price when discount enabled
+function renderPriceBlock(item){
+  try{
+    const orig = item.price;
+    const pct = state && typeof state.discountPercent === 'number' ? state.discountPercent : 0;
+    if(pct > 0){
+      const discounted = Number((orig * (1 - pct/100)).toFixed(2));
+      return `<span class="orig-price">${inrFmt.format(orig)}</span> <span class="disc-price ms-2">${inrFmt.format(discounted)}</span><span class="discount-badge ms-2">${pct}% OFF</span>`;
+    }
+    return `<span class="disc-price">${formatForDisplay(orig)}</span>`;
+  }catch(e){ return formatForDisplay(item.price); }
 }
 
 function renderMenu() {
@@ -171,7 +204,7 @@ function renderMenu() {
             </div>
           </div>
           <h5 class="card-title">${i.name}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">${i.category} • <span class="price-text" data-id="${i.id}">${formatForDisplay(i.price)}</span></h6>
+            <h6 class="card-subtitle mb-2 text-muted">${i.category} • <span class="price-block" data-id="${i.id}">${renderPriceBlock(i)}</span></h6>
           <p class="card-text flex-grow-1">${i.desc}</p>
           <div class="d-flex justify-content-between align-items-center mt-3">
             <div>
@@ -214,8 +247,8 @@ function renderMenu() {
     });
   });
 
-    // price edit handlers (open modal)
-    document.querySelectorAll('.price-text').forEach(el=>{
+    // price edit handlers (open modal) - use .price-block now
+    document.querySelectorAll('.price-block').forEach(el=>{
       el.addEventListener('click', (ev)=>{
         if(!editMode) return;
         const id = Number(el.getAttribute('data-id'));
@@ -296,6 +329,19 @@ if(currencySelect){
     updateTotals();
   });
 }
+
+// discount toggle DOM handling
+const discountSelect = document.getElementById('discount-select');
+if(discountSelect){
+  discountSelect.value = String(state.discountPercent || 0);
+  discountSelect.addEventListener('change', (e)=>{
+    const val = Number(e.target.value);
+    if (![0,10,25,50].includes(val)) return;
+    state.discountPercent = val;
+    try{ localStorage.setItem(DISCOUNT_PERCENT_KEY, String(val)); }catch(ex){}
+    renderMenu(); updateTotals();
+  });
+}
 if(toggleEditBtn){
   toggleEditBtn.addEventListener('click', ()=>{
     editMode = !editMode;
@@ -314,7 +360,7 @@ function renderCartDrawer(){
         <img src="${it.img}" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'160\\' height=\\'96\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23f8f4ed\\'/><text x=\\'50%\\' y=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23999\\' font-size=\\'12\\'>No image</text></svg>'" />
         <div style="flex:1">
           <div><strong>${it.name}</strong></div>
-          <div class="text-muted small">${inrFmt.format(it.price)}</div>
+          <div class="text-muted small">${formatForDisplay(it.price)}</div>
         </div>
         <div class="text-end">
           <div><button class="btn btn-sm btn-outline-secondary cart-dec" data-id="${id}"><i class="fa-solid fa-minus"></i></button>
@@ -340,8 +386,8 @@ function saveCartAndRefresh(){ try{ localStorage.setItem('restaurant_cart_v1', J
 
 function updateQtysAndTotals(){ menu.forEach(i => updateQty(i.id)); updateTotals(); }
 
-if(openCartBtn && cartDrawer){ openCartBtn.addEventListener('click', ()=>{ cartDrawer.classList.add('open'); renderCartDrawer(); cartDrawer.setAttribute('aria-hidden','false'); }); }
-if(closeCartBtn && cartDrawer){ closeCartBtn.addEventListener('click', ()=>{ cartDrawer.classList.remove('open'); cartDrawer.setAttribute('aria-hidden','true'); }); }
+if(openCartBtn && cartDrawer){ openCartBtn.addEventListener('click', ()=>{ cartDrawer.classList.add('open'); renderCartDrawer(); }); }
+if(closeCartBtn && cartDrawer){ closeCartBtn.addEventListener('click', ()=>{ cartDrawer.classList.remove('open'); }); }
 
 // --- Price modal logic ---
 const priceModal = document.getElementById('price-modal');
@@ -423,7 +469,16 @@ checkoutSubmit && checkoutSubmit.addEventListener('click', ()=>{
   const email = checkoutEmail.value.trim();
   if(!email || !email.includes('@')){ alert('Please enter a valid email'); return; }
   // create order object
-  const order = { id: 'order_' + Date.now(), email, items: Object.entries(state.cart).map(([id,qty])=>{ const it = menu.find(m=>m.id===Number(id)); return { id: Number(id), name: it? it.name : 'Unknown', qty, unitPriceINR: it? it.price : 0 }; }), currency:'INR', totalINR: Object.entries(state.cart).reduce((s,[id,qty])=>{ const it = menu.find(m=>m.id===Number(id)); return s + (it? it.price * qty : 0); },0), createdAt: new Date().toISOString() };
+  // build order: if discount enabled, store paid unit price and total
+  const itemsForOrder = Object.entries(state.cart).map(([id,qty])=>{
+    const it = menu.find(m=>m.id===Number(id));
+    const basePrice = it ? it.price : 0;
+    const pct = state && typeof state.discountPercent === 'number' ? state.discountPercent : 0;
+    const paidUnit = pct > 0 ? Number((basePrice * (1 - pct/100)).toFixed(2)) : basePrice;
+    return { id: Number(id), name: it? it.name : 'Unknown', qty, unitPriceINR: paidUnit };
+  });
+  const totalPaid = itemsForOrder.reduce((s,itm)=> s + (itm.unitPriceINR * itm.qty), 0);
+  const order = { id: 'order_' + Date.now(), email, items: itemsForOrder, currency:'INR', totalINR: Number(totalPaid.toFixed(2)), createdAt: new Date().toISOString() };
   // save to localStorage array
   try{
     const prev = JSON.parse(localStorage.getItem('restaurant_orders_v1')||'[]');
@@ -443,7 +498,15 @@ quickCheckoutBtn && quickCheckoutBtn.addEventListener('click', ()=>{
   const itemCount = Object.values(state.cart).reduce((s,q)=>s+q,0);
   if(itemCount === 0){ alert('Cart is empty'); return; }
   const email = 'guest@example.com';
-  const order = { id: 'order_' + Date.now(), email, items: Object.entries(state.cart).map(([id,qty])=>{ const it = menu.find(m=>m.id===Number(id)); return { id: Number(id), name: it? it.name : 'Unknown', qty, unitPriceINR: it? it.price : 0 }; }), currency:'INR', totalINR: Object.entries(state.cart).reduce((s,[id,qty])=>{ const it = menu.find(m=>m.id===Number(id)); return s + (it? it.price * qty : 0); },0), createdAt: new Date().toISOString() };
+  // build items using paid unit price when discount enabled
+  const itemsForOrder = Object.entries(state.cart).map(([id,qty])=>{
+    const it = menu.find(m=>m.id===Number(id));
+    const basePrice = it ? it.price : 0;
+    const paidUnit = state.discountEnabled ? Number((basePrice * PRICE_REDUCTION_BASE).toFixed(2)) : basePrice;
+    return { id: Number(id), name: it? it.name : 'Unknown', qty, unitPriceINR: paidUnit };
+  });
+  const totalPaid = itemsForOrder.reduce((s,itm)=> s + (itm.unitPriceINR * itm.qty), 0);
+  const order = { id: 'order_' + Date.now(), email, items: itemsForOrder, currency:'INR', totalINR: Number(totalPaid.toFixed(2)), createdAt: new Date().toISOString() };
   try{
     const prev = JSON.parse(localStorage.getItem('restaurant_orders_v1')||'[]'); prev.push(order); localStorage.setItem('restaurant_orders_v1', JSON.stringify(prev));
     if(ordersBadgeEl) ordersBadgeEl.textContent = prev.length;
@@ -516,8 +579,38 @@ function trapFocus(modalEl){
 }
 
 let activeModal = null; let activeModalUntrap = null;
-function openModal(modalEl){ if(!modalEl) return; modalEl.style.display = 'flex'; modalEl.setAttribute('aria-hidden','false'); activeModal = modalEl; activeModalUntrap = trapFocus(modalEl); }
-function closeModal(modalEl){ if(!modalEl) return; modalEl.style.display = 'none'; modalEl.setAttribute('aria-hidden','true'); if(activeModalUntrap) activeModalUntrap(); activeModal = null; activeModalUntrap = null; }
+// We'll mark the main app container and cart-drawer as inert while a modal is open so
+// screen readers and keyboard navigation cannot reach background content. This avoids
+// using aria-hidden on elements that may contain the focused element.
+const MAIN_CONTAINER_SELECTOR = '.main-container';
+function setBackgroundInert(stateBool){
+  try{
+    const main = document.querySelector(MAIN_CONTAINER_SELECTOR);
+    const drawer = document.getElementById('cart-drawer');
+    if(main) { if(stateBool) main.setAttribute('inert',''); else main.removeAttribute('inert'); }
+    if(drawer) { if(stateBool) drawer.setAttribute('inert',''); else drawer.removeAttribute('inert'); }
+  }catch(e){}
+}
+
+function openModal(modalEl){
+  if(!modalEl) return;
+  // Set inert on background to prevent focus and hide from AT
+  setBackgroundInert(true);
+  modalEl.style.display = 'flex';
+  modalEl.setAttribute('aria-hidden','false');
+  activeModal = modalEl;
+  activeModalUntrap = trapFocus(modalEl);
+}
+
+function closeModal(modalEl){
+  if(!modalEl) return;
+  modalEl.style.display = 'none';
+  modalEl.setAttribute('aria-hidden','true');
+  if(activeModalUntrap) activeModalUntrap();
+  activeModal = null; activeModalUntrap = null;
+  // restore background
+  setBackgroundInert(false);
+}
 
 document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && activeModal){ closeModal(activeModal); } });
 
@@ -531,15 +624,38 @@ const ordersListEl = document.getElementById('orders-list');
 
 function renderOrders(){
   try{
-    const arr = JSON.parse(localStorage.getItem('restaurant_orders_v1')||'[]');
-    if(!arr.length){ ordersListEl.innerHTML = '<div class="text-muted">No saved orders</div>'; return; }
-    ordersListEl.innerHTML = arr.slice().reverse().map(o=>{
-      const itemsHtml = o.items.map(it=>{
-        const lineTotal = it.unitPriceINR * it.qty;
-        return `<div>${it.qty} x ${it.name} — ${formatForDisplay(lineTotal)}</div>`;
+    // show loading spinner briefly for UI feedback
+    if(ordersListEl) ordersListEl.innerHTML = '<div class="orders-loading"><div class="orders-spinner"></div><div>Loading orders...</div></div>';
+    // simulate small async window so spinner is visible
+    setTimeout(()=>{
+      const arr = JSON.parse(localStorage.getItem('restaurant_orders_v1')||'[]');
+      // ensure we have an ordersListEl reference; if it's missing, try to create a placeholder inside the orders modal
+      if(!ordersListEl){
+        if(ordersModal){
+          const body = ordersModal.querySelector('.modal-body');
+          if(body){
+            const placeholder = document.createElement('div');
+            placeholder.id = 'orders-list';
+            placeholder.className = 'small';
+            body.appendChild(placeholder);
+            // update the variable in outer scope
+            try{ ordersListEl = document.getElementById('orders-list'); }catch(e){}
+          }
+        }
+      }
+      if(!arr.length){
+        if(ordersListEl) ordersListEl.innerHTML = '<div class="text-muted">No saved orders</div>';
+        return;
+      }
+      const html = arr.slice().reverse().map(o=>{
+        const itemsHtml = o.items.map(it=>{
+          const lineTotal = it.unitPriceINR * it.qty;
+          return `<div>${it.qty} x ${it.name} — ${formatPaidForDisplay(lineTotal)}</div>`;
+        }).join('');
+        return `<div class="order"><div><strong>Order ${o.id}</strong></div><div class="meta">${new Date(o.createdAt).toLocaleString()} — ${o.email}</div><div class="mt-1">${itemsHtml}</div><div class="mt-1"><strong>Total: ${formatPaidForDisplay(o.totalINR)}</strong></div></div>`;
       }).join('');
-      return `<div class="order"><div><strong>Order ${o.id}</strong></div><div class="meta">${new Date(o.createdAt).toLocaleString()} • ${o.email}</div><div class="mt-1">${itemsHtml}</div><div class="mt-1"><strong>Total: ${formatForDisplay(o.totalINR)}</strong></div></div>`;
-    }).join('');
+      if(ordersListEl) ordersListEl.innerHTML = html;
+    }, 220);
   }catch(e){ ordersListEl.innerHTML = '<div class="text-danger">Failed to load orders</div>'; }
 }
 

@@ -38,6 +38,7 @@
               <option value="USD">USD ($)</option>
             </select>
           </div>
+          <!-- discount toggle moved near filters for better discoverability -->
           <div class="me-3">
             <button id="toggle-edit-prices" class="btn btn-sm btn-light">Edit Prices</button>
           </div>
@@ -52,8 +53,21 @@
         </div>
       </div>
 
-      <div id="filters" class="mb-3 filters-row">
-        <!-- filter buttons inserted here -->
+      <div id="filters" class="mb-3 filters-row d-flex align-items-center justify-content-between">
+        <div class="filter-buttons">
+          <!-- filter buttons inserted here -->
+        </div>
+        <div class="filter-controls d-flex align-items-center">
+          <div class="me-3 d-flex align-items-center">
+            <label class="text-white small mb-0 me-2">Discount</label>
+            <select id="discount-select" class="form-select form-select-sm">
+              <option value="0">No discount</option>
+              <option value="10">10% OFF</option>
+              <option value="25">25% OFF</option>
+              <option value="50">50% OFF</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div id="menu" class="row g-3">

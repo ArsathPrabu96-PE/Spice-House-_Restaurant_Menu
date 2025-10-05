@@ -44,7 +44,14 @@ This is a single-page static Restaurant Menu demo built with plain JavaScript an
 
 # Versioning
 ----------
-- Current version: v1.1.0
+- Current version: v1.1.1
+
+## Upgrades in v1.1.1
+- Added a selectable discount control in the Filters area (choose No discount / 10% / 25% / 50%). The selection is persisted in localStorage.
+- Price display now shows the original price struck-through plus the discounted price and a small badge when a non-zero discount is selected.
+- Orders view: added a short loading state animation when opening Saved Orders, and improved robustness so the modal reliably renders saved orders.
+- Accessibility fix: when modals open the background is marked `inert` (prevents accidental focus/interaction) instead of using `aria-hidden` on ancestors that may contain focus.
+- Checkout and Quick Checkout now compute and save paid unit prices using the selected discount percent so saved orders show the stored paid amounts (no double discount on view).
 
 # Troubleshooting
 ---------------
