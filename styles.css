@@ -1,0 +1,165 @@
+:root{
+	--accent-1: #ff6b6b;
+	--accent-2: #ffa94d;
+	--accent-3: #8ce99a;
+	--accent-4: #74c0fc;
+	--accent-5: #b197fc;
+}
+html,body{height:100%; margin:0; padding:0;}
+body {
+	background: #111;
+	font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+	color: #111;
+	overflow-x: hidden;
+}
+.main-container{
+	position: relative;
+	z-index: 2;
+}
+.bg-rotator{
+	position: fixed;
+	inset: 0;
+	z-index: 1;
+	background-size: cover;
+	background-position: center;
+	filter: blur(2px) brightness(0.75) saturate(1.1);
+	transition: opacity 1s ease-in-out;
+}
+.brand-cartoon{ width:64px; height:64px; object-fit:cover; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.4); }
+.brand-title{ font-family: 'Pacifico', cursive; font-weight:700; font-size:32px; color:#fff; text-shadow: 0 4px 18px rgba(0,0,0,0.6); }
+.header-row { color: #fff; }
+
+/* stacked brand: title with small icon under it */
+.brand-stack { display:flex; flex-direction:column; align-items:flex-start; }
+.brand-stack img { margin-top:6px; }
+
+.chef-logo{ width:64px; height:64px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; overflow:hidden; /* background removed to eliminate empty box */ background: transparent; box-shadow: none; }
+
+/* Thumbnail inside cards */
+.thumb{ width:100%; height:160px; overflow:hidden; border-radius:12px; box-shadow: inset 0 -20px 50px rgba(0,0,0,0.08); }
+.thumb img{ width:100%; height:100%; object-fit:cover; display:block; transform-origin:center; transition: transform .6s cubic-bezier(.2,.9,.3,1); }
+.card:hover .thumb img{ transform: scale(1.06); }
+
+/* Filters */
+.filters-row button{ margin-right:8px; margin-bottom:8px; border-radius:999px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+
+/* Cards: 3D style */
+.card{
+	border-radius:18px;
+	transform-style: preserve-3d;
+	transition: transform 450ms cubic-bezier(.2,.9,.3,1), box-shadow 450ms;
+	will-change: transform;
+	background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.95));
+	box-shadow: 0 10px 30px rgba(11,22,40,0.15), 0 2px 8px rgba(0,0,0,0.08);
+}
+.card:hover{ transform: translateY(-10px) rotateX(4deg); box-shadow: 0 18px 40px rgba(11,22,40,0.25); }
+.card .card-body{ position:relative; z-index:3; }
+
+/* Glow backdrop */
+.card::before{
+	content:''; position:absolute; inset:0; z-index:1; border-radius:18px; pointer-events:none;
+	background: radial-gradient(600px 200px at 10% 10%, rgba(255,200,100,0.08), transparent 10%), radial-gradient(200px 100px at 90% 80%, rgba(120,200,255,0.04), transparent 10%);
+}
+
+/* Buttons: per-item colorful 3D look */
+.btn-acc{ border:none; color:#fff; padding:8px 12px; border-radius:12px; font-weight:600; box-shadow: 0 8px 24px rgba(0,0,0,0.18); transform-style:preserve-3d; transition: transform .2s ease, box-shadow .2s ease; }
+.btn-acc:active{ transform: translateY(3px) translateZ(0); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.btn-add-1{ background: linear-gradient(135deg,var(--accent-1), #ff5252); }
+.btn-add-2{ background: linear-gradient(135deg,var(--accent-2), #ff922b); }
+.btn-add-3{ background: linear-gradient(135deg,var(--accent-3), #63e6be); color:#062; }
+.btn-add-4{ background: linear-gradient(135deg,var(--accent-4), #4dabf7); }
+.btn-add-5{ background: linear-gradient(135deg,var(--accent-5), #9775fa); }
+
+.btn-icon{ display:inline-block; margin-right:8px; transform-origin:center; transition: transform .3s cubic-bezier(.2,.9,.3,1); }
+.btn-acc:hover .btn-icon{ transform: rotateY(360deg) scale(1.05); }
+
+/* subtle neon glow for buttons */
+.btn-add-1{ box-shadow: 0 10px 30px rgba(255,107,107,0.18); }
+.btn-add-2{ box-shadow: 0 10px 30px rgba(255,169,77,0.16); }
+.btn-add-3{ box-shadow: 0 10px 30px rgba(140,233,154,0.14); }
+.btn-add-4{ box-shadow: 0 10px 30px rgba(116,192,252,0.14); }
+.btn-add-5{ box-shadow: 0 10px 30px rgba(177,151,252,0.14); }
+
+/* Quantity controls */
+.qty-btn{ border-radius:8px; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; }
+
+/* Responsive spacing */
+@media (min-width: 768px){ .brand-title{ font-size:36px; } }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce){
+	.card, .btn-acc, .thumb img, .bg-rotator{ transition: none !important; animation: none !important; }
+	.card:hover{ transform: none; }
+}
+
+/* Make filter buttons colorful and floating */
+.filters-row .btn-outline-primary{ background: rgba(255,255,255,0.06); color:#fff; border-color: rgba(255,255,255,0.12); }
+
+/* Make totals white */
+.fw-semibold{ color:#fff; }
+
+/* Currency selector and edit button */
+#currency-select{ width:120px; }
+#toggle-edit-prices{ background:#fff; color:#111; }
+
+/* button pressed glow + shake */
+.btn-pressed{ animation: btn-glow 450ms ease both; }
+@keyframes btn-glow{
+	0%{ transform: translateY(0) scale(1); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+	30%{ transform: translateY(-4px) rotate(-1deg) scale(1.02); box-shadow: 0 18px 48px rgba(255,255,255,0.12); }
+	60%{ transform: translateY(2px) rotate(1deg) scale(1.01); }
+	100%{ transform: translateY(0) rotate(0) scale(1); }
+}
+
+/* ensure price input is small */
+.card .form-control-sm{ max-width:120px; display:inline-block; }
+
+/* Cart drawer */
+.cart-drawer{ position:fixed; right:-420px; top:0; height:100%; width:380px; background: linear-gradient(180deg,#ffffff, #fffaf0); box-shadow: -20px 0 60px rgba(0,0,0,0.25); z-index: 9999; transition: right 320ms cubic-bezier(.2,.9,.3,1); display:flex; flex-direction:column; }
+.cart-drawer.open{ right:0; }
+.cart-header{ background: linear-gradient(90deg,#ff6b6b, #ff922b); color:#fff; }
+.cart-footer{ border-top:1px solid rgba(0,0,0,0.06); }
+.cart-item{ display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+.cart-item img{ width:64px; height:48px; object-fit:cover; border-radius:8px; }
+
+/* align header controls: tidy spacing, consistent heights */
+.header-row .me-3{ display:flex; align-items:center; gap:8px; }
+.header-row label{ margin-bottom:0; color:#fff; font-size:0.85rem; }
+.header-row .form-select{ background: rgba(255,255,255,0.95); height:38px; border-radius:8px; padding:.15rem .5rem; }
+.header-row .btn-light{ background:#fff; height:38px; display:inline-flex; align-items:center; padding:.35rem .6rem; border-radius:8px; }
+.header-row .btn-sm{ height:38px; display:inline-flex; align-items:center; padding:.35rem .6rem; border-radius:8px; }
+
+/* ensure currency select and buttons look aligned */
+#currency-select{ width:130px; }
+
+/* position badges neatly inside buttons */
+#view-orders-btn .badge, #open-cart .badge, #orders-badge { transform: translateY(-10%); margin-left:6px; font-size:0.75rem; }
+
+/* Slightly reduce chef icon spacing to keep header compact */
+#chef-icon{ margin-right:12px; border-radius:10px; }
+
+/* Modal basic styling (simple, lightweight) */
+.modal {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0,0,0,0.4);
+	z-index: 1050;
+}
+.modal .modal-dialog { max-width: 540px; }
+.modal .modal-content { border-radius: 8px; overflow: hidden; }
+.modal[style*="display:none"] { display: none; }
+
+/* subtle scale & fade for modal content */
+.modal .modal-content { transform: translateY(-8px) scale(.98); opacity: 0; transition: transform 220ms ease, opacity 220ms ease; }
+.modal[style*="display:flex"] .modal-content { transform: translateY(0) scale(1); opacity: 1; }
+
+/* Orders list */
+#orders-list .order { border-bottom:1px solid rgba(0,0,0,0.06); padding:8px 0; }
+#orders-list .order .meta { color: #666; font-size: 0.85rem; }
+
+/* Cart badge adjustments */
+#cart-badge { font-size: 0.65rem; padding: 0.35rem 0.45rem; }
+

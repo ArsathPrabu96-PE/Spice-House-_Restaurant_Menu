@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+  <!-- Simple stylized chili with transparent background -->
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#ffd04d"/>
+      <stop offset="0.45" stop-color="#ff7b2f"/>
+      <stop offset="1" stop-color="#e82b2b"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <path d="M480 80c0 88-192 160-320 144C64 208 16 152 16 128c0-24 40-56 88-72 48-16 120-24 176-16 96 12 220 40 220 40z" fill="url(#g)"/>
+    <path d="M392 32c20 8 36 28 36 52 0 0-48-12-88 8s-84 52-140 64c-56 12-108 8-108 8s48-16 84-36c36-20 88-44 148-60 60-16 108-36 168-36z" fill="#f95d2b" opacity="0.15"/>
+    <path d="M488 24c4 8 0 18-8 22l-20 8c-6-12-16-22-28-28l20-6c10-4 18-12 24-4 6 8 12 8 12 8z" fill="#4fb949"/>
+  </g>
+</svg>
